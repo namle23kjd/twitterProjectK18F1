@@ -5,7 +5,8 @@ import {
   emailVerifyController,
   loginController,
   logoutController,
-  registerController
+  registerController,
+  resendEmailVerifyController
 } from '~/controllers/users.controllers'
 import {
   accessTokenValidator,
@@ -44,5 +45,11 @@ usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, warpAsy
 */
 usersRouter.post('/verify-email', emailVerifyTokenValidator, warpAsync(emailVerifyController))
 
+/*
+  des: resend email verify
+  method : POST
+  headers : {Authorization: Bearer <access_token>}
+*/
+usersRouter.post('/resend-email-verify', accessTokenValidator, warpAsync(resendEmailVerifyController))
 export default usersRouter
 //Lệnh để public method

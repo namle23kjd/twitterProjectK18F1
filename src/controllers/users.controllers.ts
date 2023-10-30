@@ -8,6 +8,7 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import { ObjectId } from 'mongodb'
 import { USER_MESSAGES } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/httpStatus'
+import { UserVerifyStatus } from '~/constants/enums'
 User
 databaseService
 constrainedMemory
@@ -71,4 +72,28 @@ export const emailVerifyController = async (req: Request<ParamsDictionary, any, 
     message: USER_MESSAGES.EMAIL_VERIFY_SUCCESS,
     result
   })
+}
+
+export const resendEmailVerifyController = async (req: Request, res: Response) => {
+  //Nếu qua được hàm này tức là đã qua được cái access_token_validator
+  //Điều đó có nghĩa là trong request đã có decoded_authorization
+  const { user_id } = req.decoded_authorization as TokenPayload
+  //tìm user có user_id đó
+  const user = await databaseService.user.findOne({ _id: new ObjectId(user_id) })
+  //Nếu ko có user thì sẽ res ra lỗi
+  if (user === null) {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
+      message: USER_MESSAGES.USER_NOT_FOUND
+    })
+  }
+  //Nếu có user thì xem thử nó đã verify chưa
+  if (user.verify === UserVerifyStatus.Verified) {
+    return res.json({
+      message: USER_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE
+    })
+  }
+  //Nếu mà xuống được đây nghĩa là user này chưa verified và bị mất
+  //Mình tiến hành tạo mới và sẽ lưu vào database
+  const result = await userService.resendEmailVerify(user_id)
+  return res.json(result)
 }
