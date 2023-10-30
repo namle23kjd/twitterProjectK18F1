@@ -1,12 +1,13 @@
 import { NextFunction, Request, Response } from 'express'
 import { constrainedMemory } from 'process'
-import { LogoutReqBody, RegisterReqBody } from '~/models/request/user.request'
+import { EmailVerifyReqBody, LogoutReqBody, RegisterReqBody, TokenPayload } from '~/models/request/user.request'
 import User from '~/models/schemas/User.schema'
 import databaseService from '~/services/database.services'
 import userService from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { ObjectId } from 'mongodb'
 import { USER_MESSAGES } from '~/constants/messages'
+import HTTP_STATUS from '~/constants/httpStatus'
 User
 databaseService
 constrainedMemory
@@ -44,4 +45,30 @@ export const logoutController = async (req: Request<ParamsDictionary, any, Logou
   //goi hàm logout, hàm nhận vào refresh token tìm và xóa
   const result = await userService.logout(refresh_token)
   res.json(result)
+}
+
+export const emailVerifyController = async (req: Request<ParamsDictionary, any, EmailVerifyReqBody>, res: Response) => {
+  //Khi mà req vào đc đây nghĩa là emai_verify_token đã valid
+  //Đồng thời trong req đã có decoded_email_verify_token
+  const { user_id } = req.decoded_email_verify_token as TokenPayload
+  const user = await databaseService.user.findOne({ _id: new ObjectId(user_id) })
+  if (user === null) {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
+      message: USER_MESSAGES.USER_NOT_FOUND
+    })
+  }
+  //Nếu có user đó thì mình sẽ ktr xem user đó có lưu email_verify_token hay ko
+  if (user.email_verify_token === '') {
+    return res.json({
+      message: USER_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE
+    })
+  }
+  //Nếu xuống được đây nghĩa là user này chưa là có , và chưa verify
+  //verifyEmail(user_id) là : tìm user đó bằng user_id và update lại email_verify_token thành ''
+  // và verify thành :1
+  const result = await userService.verifyEmail(user_id)
+  return res.json({
+    message: USER_MESSAGES.EMAIL_VERIFY_SUCCESS,
+    result
+  })
 }

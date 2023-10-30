@@ -189,9 +189,6 @@ export const accessTokenValidator = validate(
     {
       Authorization: {
         trim: true,
-        notEmpty: {
-          errorMessage: USER_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
-        },
         custom: {
           options: async (value: string, { req }) => {
             const access_token = value.split(' ')[1]
@@ -203,7 +200,10 @@ export const accessTokenValidator = validate(
             }
             // 1. verify access_token này xem có phải của server tạo ra không?
             try {
-              const decoded_authorization = await verifyToken({ token: access_token })
+              const decoded_authorization = await verifyToken({
+                token: access_token,
+                secretOrPublickey: process.env.JWT_SECRET_ACCESS_TOKEN as string
+              })
               req.decoded_authorization = decoded_authorization
             } catch (error) {
               throw new ErrorWithStatus({
@@ -219,57 +219,20 @@ export const accessTokenValidator = validate(
     ['headers']
   )
 )
-// export const refreshTokenValidator = validate(
-//   checkSchema(
-//     {
-//       refresh_token: {
-//         trim: true,
-//         notEmpty: {
-//           errorMessage: USER_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
-//         },
-//         custom: {
-//           options: async (value: string, { req }) => {
-//             // 1. verify refresh_token này xem có phải của server tạo ra không?
-//             try {
-//               const decoded_refresh_token = await verifyToken({ token: value })
-//               const refresh_token = await databaseService.refreshTokens.findOne({ token: value })
-//               if (refresh_token === null) {
-//                 throw new ErrorWithStatus({
-//                   message: USER_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXIST,
-//                   status: HTTP_STATUS.UNAUTHORIZED
-//                 })
-//               }
-//               req.decoded_refresh_token = decoded_refresh_token
-//             } catch (error) {
-//               //Nếu lỗi phát sinh trong quá trình verify thì mình tạo thành lỗi có status
-//               if (error instanceof ErrorWithStatus) {
-//                 throw new ErrorWithStatus({
-//                   message: USER_MESSAGES.REFRESH_TOKEN_IS_INVALID,
-//                   status: HTTP_STATUS.UNAUTHORIZED
-//                 })
-//               }
-//               throw error
-//             }
-//             return true
-//           }
-//         }
-//       }
-//     },
-//     ['body']
-//   )
+
 export const refreshTokenValidator = validate(
   checkSchema(
     {
       refresh_token: {
         trim: true,
-        notEmpty: {
-          errorMessage: USER_MESSAGES.REFRESH_TOKEN_IS_REQUIRED
-        },
         custom: {
           options: async (value: string, { req }) => {
             // 1. verify refresh_token này xem có phải của server tạo ra không?
             try {
-              const decoded_refresh_token = await verifyToken({ token: value })
+              const decoded_refresh_token = await verifyToken({
+                token: value,
+                secretOrPublickey: process.env.JWT_SECRET_REFRESH_TOKEN as string
+              })
               const refresh_token = await databaseService.refreshTokens.findOne({ token: value })
               if (refresh_token === null) {
                 throw new ErrorWithStatus({
@@ -279,6 +242,46 @@ export const refreshTokenValidator = validate(
               }
               req.decoded_refresh_token = decoded_refresh_token
               ;(req as Request).decoded_refresh_token = decoded_refresh_token
+            } catch (error) {
+              // nếu lỗi phát sinh trong quá trình verify thì mình tạo thành lỗi có status
+              if (error instanceof JsonWebTokenError) {
+                throw new ErrorWithStatus({
+                  message: USER_MESSAGES.REFRESH_TOKEN_IS_INVALID,
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+              // nếu lỗi k phải dạng JsonWebTokenError
+              throw error
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const emailVerifyTokenValidator = validate(
+  checkSchema(
+    {
+      email_verify_token: {
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            //Nếu cái email_verify_token ko gửi lên thì response lỗi
+            if (!value) {
+              throw new ErrorWithStatus({
+                message: USER_MESSAGES.EMAIL_VERIFY_TOKEN_IS_REQUIRED,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+            try {
+              const decoded_email_verify_token = await verifyToken({
+                token: value,
+                secretOrPublickey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string
+              })
+              ;(req as Request).decoded_email_verify_token = decoded_email_verify_token
             } catch (error) {
               // nếu lỗi phát sinh trong quá trình verify thì mình tạo thành lỗi có status
               if (error instanceof JsonWebTokenError) {
