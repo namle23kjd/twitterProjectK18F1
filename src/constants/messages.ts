@@ -38,5 +38,8 @@ export const USER_MESSAGES = {
   EMAIL_VERIFY_SUCCESS: 'Email verify successfully',
   RESEND_EMAIL_VERIFY_SUCCESS: 'Resend email verify successfully',
   FORGOT_PASSWORD_SUCCESS: 'Forgot password successfully',
-  CHECK_EMAIL_TO_RESET_PASSWORD: 'Check email to reset password'
+  CHECK_EMAIL_TO_RESET_PASSWORD: 'Check email to reset password',
+  FORGOT_PASSWORD_TOKEN_IS_REQUIRED: 'Forgot password token is required',
+  FORGOT_PASSWORD_TOKEN_IS_INVALID: 'Forgot password token is invalid',
+  VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS: 'Verify forgot password token successfully'
 } as const //để cho thành hằng số

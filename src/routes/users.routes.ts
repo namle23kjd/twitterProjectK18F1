@@ -1,3 +1,4 @@
+import { verify } from 'crypto'
 import { Router } from 'express'
 import { access } from 'fs'
 import { register } from 'module'
@@ -7,7 +8,8 @@ import {
   loginController,
   logoutController,
   registerController,
-  resendEmailVerifyController
+  resendEmailVerifyController,
+  verifyForgotPasswordTokenController
 } from '~/controllers/users.controllers'
 import {
   accessTokenValidator,
@@ -15,7 +17,8 @@ import {
   forgorPasswordValidator,
   loginValidator,
   refreshTokenValidator,
-  registerValidator
+  registerValidator,
+  verifyForgotPasswordTokenValidator
 } from '~/middlewares/users.middlewares'
 import { warpAsync } from '~/utils/handlers'
 const usersRouter = Router()
@@ -63,5 +66,20 @@ usersRouter.post('/resend-email-verify', accessTokenValidator, warpAsync(resendE
   body: {email: string}
 */
 usersRouter.post('/forgot-password', forgorPasswordValidator, warpAsync(forgorPasswordController))
+/*
+  des: verify forgot password token
+  người dùng sau khi báo forgotpassword, họ nhận dducc 1 email 
+  họ click vào link trong email đó , link đó sẽ có 1 request đính
+  kèm forgot_password_token và gửi lến server /users/verify-forgot-password-token
+  mình sẽ verify cái token này nếu thành công thì mình sẽ cho ngta reset password`
+  method: POST
+  path: /users/verify-forgot-password-token
+  body: {forgot_password_token: string}
+*/
+usersRouter.post(
+  '/verify-forgot-password-token',
+  verifyForgotPasswordTokenValidator,
+  warpAsync(verifyForgotPasswordTokenController)
+)
 export default usersRouter
 //Lệnh để public method
