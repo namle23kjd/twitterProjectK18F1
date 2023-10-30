@@ -1,6 +1,12 @@
 import { NextFunction, Request, Response } from 'express'
 import { constrainedMemory } from 'process'
-import { EmailVerifyReqBody, LogoutReqBody, RegisterReqBody, TokenPayload } from '~/models/request/user.request'
+import {
+  EmailVerifyReqBody,
+  ForgotPasswordReqBody,
+  LogoutReqBody,
+  RegisterReqBody,
+  TokenPayload
+} from '~/models/request/user.request'
 import User from '~/models/schemas/User.schema'
 import databaseService from '~/services/database.services'
 import userService from '~/services/users.services'
@@ -95,5 +101,15 @@ export const resendEmailVerifyController = async (req: Request, res: Response) =
   //Nếu mà xuống được đây nghĩa là user này chưa verified và bị mất
   //Mình tiến hành tạo mới và sẽ lưu vào database
   const result = await userService.resendEmailVerify(user_id)
+  return res.json(result)
+}
+export const forgorPasswordController = async (
+  req: Request<ParamsDictionary, any, ForgotPasswordReqBody>,
+  res: Response
+) => {
+  //vì đã qua forgotPasswordValidator nên trong req đã có user
+  const { _id } = req.user as User
+  //tiến hành tạo forgot_password_token và lưu vào user đó kèm email
+  const result = await userService.forgotPassword((_id as ObjectId).toString())
   return res.json(result)
 }

@@ -3,6 +3,7 @@ import { access } from 'fs'
 import { register } from 'module'
 import {
   emailVerifyController,
+  forgorPasswordController,
   loginController,
   logoutController,
   registerController,
@@ -11,6 +12,7 @@ import {
 import {
   accessTokenValidator,
   emailVerifyTokenValidator,
+  forgorPasswordValidator,
   loginValidator,
   refreshTokenValidator,
   registerValidator
@@ -51,5 +53,15 @@ usersRouter.post('/verify-email', emailVerifyTokenValidator, warpAsync(emailVeri
   headers : {Authorization: Bearer <access_token>}
 */
 usersRouter.post('/resend-email-verify', accessTokenValidator, warpAsync(resendEmailVerifyController))
+
+/*
+  des: forgor password
+  khi người dùng quên mật khẩu, họ cung cấp email cho mình
+  mình sẽ xem có user nào sở hữu email đó ko , nếu có mình sẽ tạo 1 forgotpasswordtoke và gửi vào email của user đps
+  method : POST
+  path: /users/forgot-password
+  body: {email: string}
+*/
+usersRouter.post('/forgot-password', forgorPasswordValidator, warpAsync(forgorPasswordController))
 export default usersRouter
 //Lệnh để public method

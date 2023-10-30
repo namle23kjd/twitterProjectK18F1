@@ -69,6 +69,13 @@ class UserService {
       privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string
     })
   }
+  signForgotPassWordToken(user_id: string) {
+    return signToken({
+      payload: { user_id, token_type: TokenType.ForgotPasswordToken },
+      options: { expiresIn: process.env.FORGOT_PASSWORD_TOKEN_EXPIRE_IN },
+      privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
+    })
+  }
   async login(user_id: string) {
     const [access_token, refresh_token] = await this.signAccessTokenRefreshToken(user_id)
     await databaseService.refreshTokens.insertOne(
@@ -119,6 +126,7 @@ class UserService {
     )
     return { access_token, refresh_token }
   }
+
   async resendEmailVerify(user_id: string) {
     //tạo email_verify_token mới
     const email_verify_token = await this.signEmailVerifyToken(user_id)
@@ -134,7 +142,28 @@ class UserService {
     //giả lập gửi email cái email_verify_token này cho user
     console.log(email_verify_token)
     return {
-      message: USER_MESSAGES.EMAIL_VERIFY_SUCCESS
+      message: USER_MESSAGES.RESEND_EMAIL_VERIFY_SUCCESS
+    }
+  }
+  async forgotPassword(user_id: string) {
+    //tạo forgot_password_token
+    const forgot_password_token = await this.signForgotPassWordToken(user_id)
+    //update lại user bằng forgot_password_token mới và update_at vào database
+    await databaseService.user.updateOne({ _id: new ObjectId(user_id) }, [
+      {
+        $set: {
+          forgot_password_token,
+          updated_at: '$$NOW'
+        }
+      }
+    ])
+
+    //gửi mail cho user đps
+    console.log('forgot_password_token: ', forgot_password_token)
+
+    //Thông báo gửi thành công
+    return {
+      message: USER_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD
     }
   }
 }

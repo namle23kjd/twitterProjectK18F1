@@ -36,5 +36,7 @@ export const USER_MESSAGES = {
   USER_NOT_FOUND: 'User not found',
   EMAIL_ALREADY_VERIFIED_BEFORE: 'Email already verified before',
   EMAIL_VERIFY_SUCCESS: 'Email verify successfully',
-  RESEND_EMAIL_VERIFY_SUCCESS: 'Resend email verify successfully'
+  RESEND_EMAIL_VERIFY_SUCCESS: 'Resend email verify successfully',
+  FORGOT_PASSWORD_SUCCESS: 'Forgot password successfully',
+  CHECK_EMAIL_TO_RESET_PASSWORD: 'Check email to reset password'
 } as const //để cho thành hằng số

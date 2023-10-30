@@ -301,3 +301,30 @@ export const emailVerifyTokenValidator = validate(
     ['body']
   )
 )
+
+export const forgorPasswordValidator = validate(
+  checkSchema({
+    email: {
+      notEmpty: {
+        errorMessage: USER_MESSAGES.EMAIL_IS_REQUIRED
+      },
+      isEmail: {
+        errorMessage: USER_MESSAGES.EMAIL_IS_INVALID
+      },
+      trim: true,
+      custom: {
+        options: async (value, { req }) => {
+          //tìm user có email này
+          const user = await databaseService.user.findOne({ email: value })
+          //Nếu ko có thì sao gửi , trả ra res lun
+          if (user === null) {
+            throw new Error(USER_MESSAGES.USER_NOT_FOUND)
+          }
+          //Nếu có user thì lưu lại vào req
+          req.user = user
+          return true
+        }
+      }
+    }
+  })
+)
