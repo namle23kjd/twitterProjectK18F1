@@ -5,6 +5,7 @@ import {
   ForgotPasswordReqBody,
   LogoutReqBody,
   RegisterReqBody,
+  ResetPasswordReqBody,
   TokenPayload
 } from '~/models/request/user.request'
 import User from '~/models/schemas/User.schema'
@@ -114,7 +115,30 @@ export const forgorPasswordController = async (
   return res.json(result)
 }
 export const verifyForgotPasswordTokenController = async (req: Request, res: Response) => {
-  res.json({
+  return res.json({
     message: USER_MESSAGES.VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS
+  })
+}
+
+export const resetPasswordController = async (
+  req: Request<ParamsDictionary, any, ResetPasswordReqBody>,
+  res: Response
+) => {
+  //MiddleWare resetPasswordValidator đã chạy hết rồi, Nên ta có thể lấy được user_ID từ decode_forgot_password_token
+  const { user_id } = req.decoded_forgot_password_token as TokenPayload
+  const { password } = req.body
+  //Vào database tìm user thông qua user_id này cập nhật lại password mới
+  //Vì vào databasse nên ta sẽ code ở user.services
+  const result = await userService.resetPassword({ user_id, password })
+  return res.json(result)
+}
+
+export const getMeController = async (req: Request, res: Response) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  //Vào databse tìm user đó thông qua user_id này và đưa cho client
+  const result = await userService.getMe(user_id)
+  return res.json({
+    message: USER_MESSAGES.GET_ME_SUCCESS,
+    result
   })
 }

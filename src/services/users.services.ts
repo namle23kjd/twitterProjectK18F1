@@ -166,6 +166,44 @@ class UserService {
       message: USER_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD
     }
   }
+  async resetPassword({ user_id, password }: { user_id: string; password: string }) {
+    //TÌm user thông qua user_id và thông qua đó cập nhật lại password và forgot_password_token
+    //tất nhiên là lưu password đã hash rồi
+    //Ta ko cần phải kiểm tra user có tồn tại không, vì ForgotPasswordTokenValidator đã làm rồi
+    databaseService.user.updateOne({ _id: new ObjectId(user_id) }, [
+      {
+        $set: {
+          password: hashPassword(password),
+          forgot_password_token: '',
+          update_at: '$$NOW'
+        }
+      }
+    ])
+    //Nếu ở đây người ra muốn đổi mk xong rồi tự động đăng nhập luôn thì trả về access_token , refresh_token
+    //Ở đây mình chỉ cho ngta đổi mk thôi , Nên trả về message
+    return {
+      message: USER_MESSAGES.RESET_PASSWORD_SUCCESS
+    }
+  }
+  async getMe(user_id: string) {
+    //Tìm user thông qua user_id
+    const user = await databaseService.user.findOne(
+      { _id: new ObjectId(user_id) },
+      {
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0,
+          refresh_tokens: 0
+        }
+      }
+    )
+    //Nếu ko có user thì trả về lỗi
+    return {
+      message: USER_MESSAGES.GET_ME_SUCCESS,
+      result: user
+    }
+  }
 }
 
 const userService = new UserService()
